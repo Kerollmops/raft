@@ -1,3 +1,5 @@
+#ifdef __linux__ //TODO: this should be done from the build system
+
 #include "syscall.h"
 
 #if HAVE_LINUX_AIO_ABI_H || HAVE_LINUX_IO_URING_H
@@ -55,3 +57,4 @@ int io_uring_enter(int fd,
                         sig, _NSIG / 8);
 }
 #endif
+#endif /* linux */
