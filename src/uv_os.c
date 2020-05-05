@@ -39,7 +39,25 @@ int UvOsClose(uv_file fd)
     return uv_fs_close(NULL, &req, fd, NULL);
 }
 
-#ifdef _WIN32
+#ifdef __APPLE__
+int UvOsFallocate(uv_file fd, off_t offset, off_t len)
+{
+    int res;
+
+    fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, offset, len, 0};
+    res = fcntl(fd, F_PREALLOCATE, &store);
+    if (res == -1) {
+        // try and allocate space with fragments
+        store.fst_flags = F_ALLOCATEALL;
+        res = fcntl(fd, F_PREALLOCATE, &store);
+    }
+    if (res != -1) {
+        res = ftruncate(fd, offset+len);
+    }
+
+    return res;
+}
+#elif defined (_WIN32)
 int UvOsFallocate(uv_file fd, off_t offset, off_t len)
 {
     //TODO: implement functionality
