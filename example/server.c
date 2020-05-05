@@ -171,7 +171,10 @@ static int ServerInit(struct Server *s,
     memset(s, 0, sizeof *s);
 
     /* Seed the random generator */
-#if defined(_WIN32)
+#if defined(__APPLE__)
+    /*osx doesn't implement timespec_get*/
+    srandom(5);
+#elif defined(_WIN32)
     /*mingw doesn't implement timespec_get*/
     srandom(5);
 #else
@@ -276,9 +279,8 @@ static void serverApplyCb(struct raft_apply *req, int status, void *result)
         return;
     }
     count = *(int *)result;
-    if (count % 100 == 0) {
-        Logf(s->id, "count %d", count);
-    }
+    // Always display the count
+    Logf(s->id, "count %d", count);
 }
 
 /* Called periodically every APPLY_RATE milliseconds. */
@@ -292,6 +294,8 @@ static void serverTimerCb(uv_timer_t *timer)
     if (s->raft.state != RAFT_LEADER) {
         return;
     }
+
+    Log(s->id, "I am the leader");
 
     buf.len = sizeof(uint64_t);
     buf.base = raft_malloc(buf.len);

@@ -41,7 +41,6 @@ static void forkServer(const char *topLevelDir, unsigned i, pid_t *pid)
         char *dir = malloc(strlen(topLevelDir) + strlen("/D") + 1);
         char *id = malloc(N_SERVERS / 10 + 2);
         char *argv[] = {"./example/server", dir, id, NULL};
-        char *envp[] = {NULL};
         int rv;
         sprintf(dir, "%s/%u", topLevelDir, i + 1);
         rv = ensureDir(dir);
@@ -49,7 +48,7 @@ static void forkServer(const char *topLevelDir, unsigned i, pid_t *pid)
             abort();
         }
         sprintf(id, "%u", i + 1);
-        execve("./example/server", argv, envp);
+        execv("./example/server", argv);
     }
 }
 
@@ -82,8 +81,12 @@ int main(int argc, char *argv[])
     }
 
     /* Seed the random generator */
+#if defined(__APPLE__)
+    srandom(5);
+#else
     timespec_get(&now, TIME_UTC);
     srandom((unsigned)(now.tv_nsec ^ now.tv_sec));
+#endif
 
     while (1) {
         struct timespec interval;
